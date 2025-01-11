@@ -2,6 +2,8 @@
 
 Visualize activation tensors for Transformer models.
 
+<img src="screenshot.png"/>
+
 ## Installation
 
 1. Clone the repository:
