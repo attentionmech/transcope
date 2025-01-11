@@ -39,7 +39,7 @@ available_models = [
 def normalize_to_range(matrix):
     return np.tanh(matrix)
 
-def apply_pca_(matrix, n_components=2):
+def apply_pc1a_(matrix, n_components=2):
     pca = PCA(n_components=n_components)
     return pca.fit_transform(matrix)
 
@@ -62,7 +62,7 @@ def create_heatmap(matrix, color_scale='Rainbow', width=800, height=600, scale=2
     
     return fig
 
-def generate_plot(matrix, normalization=False, apply_pca=False, color_scale='Rainbow'):
+def generate_plo1t(matrix, normalization=False, apply_pca=False, color_scale='Rainbow'):
     if normalization:
         matrix = normalize_to_range(matrix)
     
@@ -73,14 +73,27 @@ def generate_plot(matrix, normalization=False, apply_pca=False, color_scale='Rai
     return create_heatmap(matrix, color_scale=color_scale)
 
 
-st.sidebar.title("transcope")
-st.sidebar.text("Transformer Scope")
+
+def apply_pca_(matrix, n_components):
+    pca = PCA(n_components=n_components)
+    return pca.fit_transform(matrix)
+
+def generate_plot(matrix, normalization=False, apply_pca=False, pca_components=2, color_scale='Rainbow'):
+    if normalization:
+        matrix = normalize_to_range(matrix)
+    
+    if apply_pca:
+        matrix = apply_pca_(matrix, n_components=pca_components)
+
+    return create_heatmap(matrix, color_scale=color_scale)
+
+st.sidebar.title("Transformer Scope")
 
 model_name = st.sidebar.selectbox("Select Model", available_models)
 
 model = transformer_lens.HookedTransformer.from_pretrained(model_name)
 
-text_input = st.sidebar.text_input("Enter your text", value="Hello World")
+text_input = st.sidebar.text_input("Enter your text", value="Hello, Transformer Scoper")
 
 logits, activations = model.run_with_cache(text_input)
 
@@ -88,9 +101,10 @@ layer_name = st.sidebar.selectbox("Select Layer", list(activations.keys()))
 
 normalize_option = st.sidebar.checkbox("Normalize Matrix Values", value=True)
 
-color_scale = st.sidebar.selectbox("Select Color Scale", ['Viridis', 'Cividis', 'Plasma', 'Inferno', 'Magma', 'Rainbow'])
+color_scale = st.sidebar.selectbox("Select Color Scale", ['Rainbow', 'Cividis', 'Plasma', 'Inferno', 'Magma', 'Viridis'])
 
-apply_pca = st.sidebar.checkbox("Apply PCA to Reduce Dimensions", value=False)
+apply_pca = st.sidebar.checkbox("Apply PCA to Reduce Dimensions", value=True)
+
 
 activation_tensor = activations[layer_name].cpu().numpy()
 
@@ -99,4 +113,12 @@ reshaped_activation = activation_tensor.reshape(-1, activation_tensor.shape[-1])
 st.write(f"Layer: {layer_name} Shape: {activation_tensor.shape}")
 plot = generate_plot(reshaped_activation, normalization=normalize_option, apply_pca=apply_pca, color_scale=color_scale)
 
+
+
+pca_components = st.sidebar.number_input("Number of PCA Components", min_value=2, max_value=50, value=2, step=1)
+
+
+plot = generate_plot(reshaped_activation, normalization=normalize_option, apply_pca=apply_pca, pca_components=pca_components, color_scale=color_scale)
+
 st.plotly_chart(plot)
+
