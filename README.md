@@ -38,6 +38,10 @@ Simple script to visualize activation tensors for Transformer models. Wraps over
    streamlit run transcope.py
    ```
 
+## Walkthrough
+
+We use Principal Component Analysis (PCA) to reduce the dimensionality of high-dimensional activation tensors from models. The activation tensors are first reshaped (e.g., using reshape(-1, <last dimension size>)) to combine the tokens' activations into a 2D matrix, such as (7, 768) (7 tokens, 768 features each). PCA is then applied to reduce this to (7, 2), capturing the most important features in just 2 dimensions. This makes it easier to visualize and compare token activations while retaining the key information for further analysis.
+
 
 ## Dependencies
 
