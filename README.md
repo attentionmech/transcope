@@ -13,8 +13,8 @@ Simple script to visualize activation tensors for Transformer models. Wraps over
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/attentionmech/transcope.git
-   cd transcope
+   git clone https://github.com/attentionmech/transformer-scope.git
+   cd transformer-scope
    ```
 
 2. Install dependencies:
