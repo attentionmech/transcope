@@ -2,7 +2,10 @@
 
 Visualize activation tensors for Transformer models. (Just an initial POC using streamlit rapid prototyping)
 
-<img src="screenshot.png"/>
+<img src="assets/screenshot.png"/>
+<br>
+
+![demo gif](https://github.com/attentionmech/transcope/blob/main/assets/demo.gif?raw=true)
 
 ## Installation
 
