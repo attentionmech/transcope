@@ -86,6 +86,33 @@ def generate_plot(matrix, normalization=False, normalization_type="tanh", apply_
 
     return create_heatmap(matrix, title=title, color_scale=color_scale, width=width, height=height)
 
+import plotly.graph_objects as go
+
+import plotly.graph_objects as go
+
+def create_3d_heatmap(matrix, title="3D Activation Heatmap", color_scale='Rainbow', width=800, height=600):
+    fig = go.Figure(data=[go.Surface(z=matrix, colorscale=color_scale)])
+    fig.update_layout(
+        title=dict(text=title),
+        autosize=False,
+        width=width,
+        height=height,
+        margin=dict(l=65, r=50, b=65, t=90)
+    )
+    return fig
+
+def generate_3d_plot(matrix, normalization=False, normalization_type="tanh", apply_pca=False, pca_components=3, color_scale='Rainbow', title="3D Activation Heatmap", height=800, width=600):
+    if normalization:
+        matrix = normalize_to_range(matrix, normalization_type=normalization_type)
+    
+    if apply_pca:
+        matrix = apply_pca_(matrix, n_components=pca_components)
+        # Ensure PCA produces a compatible matrix for a surface plot
+        if matrix.shape[1] < 2:
+            raise ValueError("PCA components too low for 3D plotting")
+    
+    return create_3d_heatmap(matrix, title=title, color_scale=color_scale, width=width, height=height)
+
 
 st.sidebar.title("Transformer Scope")
 st.sidebar.divider()
@@ -135,18 +162,29 @@ except:
 
 st.sidebar.divider()
 
+graph_type = st.sidebar.selectbox("Select Graph Type", ['2d', '3d'])
 color_scale = st.sidebar.selectbox("Select Color Scale", ['Rainbow', 'Cividis', 'Plasma', 'Inferno', 'Magma', 'Viridis'])
 heatmap_width = st.sidebar.slider("Heatmap Width", min_value=500, max_value=2000, value=1200, step=100)
 heatmap_height = st.sidebar.slider("Heatmap Height", min_value=500, max_value=2000, value=800, step=100)
 
 
 
-if diff is not None:
-    diff_plot = generate_plot(diff, normalization=normalize_option, apply_pca=should_apply_pca, pca_components=pca_components, color_scale=color_scale, title="Diff Activation (1-2)", height=heatmap_height, width=heatmap_width)
-    st.plotly_chart(diff_plot)
 
-plot1 = generate_plot(reshaped_activation1, normalization=normalize_option, apply_pca=should_apply_pca, pca_components=pca_components, color_scale=color_scale, title="Text 1 Activation", height=heatmap_height, width=heatmap_width)
-plot2 = generate_plot(reshaped_activation2, normalization=normalize_option, apply_pca=should_apply_pca, pca_components=pca_components, color_scale=color_scale, title="Text 2 Activation", height=heatmap_height, width=heatmap_width)
+if graph_type == '2d':
+    if diff is not None:
+        diff_plot = generate_plot(diff, normalization=normalize_option, apply_pca=should_apply_pca, pca_components=pca_components, color_scale=color_scale, title="Diff Activation (1-2)", height=heatmap_height, width=heatmap_width)
+        st.plotly_chart(diff_plot)
+
+    plot1 = generate_plot(reshaped_activation1, normalization=normalize_option, apply_pca=should_apply_pca, pca_components=pca_components, color_scale=color_scale, title="Text 1 Activation", height=heatmap_height, width=heatmap_width)
+    plot2 = generate_plot(reshaped_activation2, normalization=normalize_option, apply_pca=should_apply_pca, pca_components=pca_components, color_scale=color_scale, title="Text 2 Activation", height=heatmap_height, width=heatmap_width)
+else:
+    if diff is not None:
+        diff_plot = generate_3d_plot(diff, normalization=normalize_option, apply_pca=should_apply_pca, pca_components=pca_components, color_scale=color_scale, title="Diff Activation (1-2)", height=heatmap_height, width=heatmap_width)
+        st.plotly_chart(diff_plot)
+
+    plot1 = generate_3d_plot(reshaped_activation1, normalization=normalize_option, apply_pca=should_apply_pca, pca_components=pca_components, color_scale=color_scale, title="Text 1 Activation", height=heatmap_height, width=heatmap_width)
+    plot2 = generate_3d_plot(reshaped_activation2, normalization=normalize_option, apply_pca=should_apply_pca, pca_components=pca_components, color_scale=color_scale, title="Text 2 Activation", height=heatmap_height, width=heatmap_width)
+
 st.plotly_chart(plot1)
 st.plotly_chart(plot2)
 
