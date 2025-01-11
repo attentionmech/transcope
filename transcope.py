@@ -105,7 +105,6 @@ color_scale = st.sidebar.selectbox("Select Color Scale", ['Rainbow', 'Cividis', 
 
 apply_pca = st.sidebar.checkbox("Apply PCA to Reduce Dimensions", value=True)
 
-
 activation_tensor = activations[layer_name].cpu().numpy()
 
 reshaped_activation = activation_tensor.reshape(-1, activation_tensor.shape[-1])
@@ -113,10 +112,7 @@ reshaped_activation = activation_tensor.reshape(-1, activation_tensor.shape[-1])
 st.write(f"Layer: {layer_name} Shape: {activation_tensor.shape}")
 plot = generate_plot(reshaped_activation, normalization=normalize_option, apply_pca=apply_pca, color_scale=color_scale)
 
-
-
 pca_components = st.sidebar.number_input("Number of PCA Components", min_value=2, max_value=50, value=2, step=1)
-
 
 plot = generate_plot(reshaped_activation, normalization=normalize_option, apply_pca=apply_pca, pca_components=pca_components, color_scale=color_scale)
 
