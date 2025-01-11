@@ -1,6 +1,6 @@
 # transcope
 
-Visualize activation tensors for Transformer models. (Just an initial POC using streamlit rapid prototyping)
+Simple script to visualize activation tensors for Transformer models.
 
 <img src="assets/screenshot.png"/>
 <br>
