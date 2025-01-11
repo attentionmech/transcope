@@ -93,8 +93,8 @@ model_name = st.sidebar.selectbox("Select Model", available_models)
 model = transformer_lens.HookedTransformer.from_pretrained(model_name)
 
 
-text_input1 = st.sidebar.text_input("Enter your first text", value="Hello, Transformer Scoper")
-text_input2 = st.sidebar.text_input("Enter your second text", value="Hello, Comparing Activations")
+text_input1 = st.sidebar.text_input("text 1", value="red is animal")
+text_input2 = st.sidebar.text_input("test 2", value="red is color")
 
 logits1, activations1 = model.run_with_cache(text_input1)
 logits2, activations2 = model.run_with_cache(text_input2)
@@ -103,15 +103,11 @@ layer_name = st.sidebar.selectbox("Select Layer", list(activations1.keys()))
 
 st.sidebar.write(f"shape: {activations1[layer_name].shape}")
 
+st.sidebar.divider()
+
 normalize_option = st.sidebar.checkbox("Normalize Matrix Values", value=True)
 normalization_type = st.sidebar.selectbox("Select Normalization Type", ['tanh', 'sigmoid', 'min_max', 'z_score', 'relu', 'softmax', 'l2'])
 
-
-
-apply_pca = st.sidebar.checkbox("Apply PCA to Reduce Dimensions", value=True)
-pca_components = st.sidebar.number_input("Number of PCA Components", min_value=2, max_value=50, value=2, step=1)
-
-st.sidebar.write("*Disable PCA if tensor dimension less than 1*")
 
 activation_tensor1 = activations1[layer_name].cpu().numpy()
 activation_tensor2 = activations2[layer_name].cpu().numpy()
@@ -119,7 +115,23 @@ activation_tensor2 = activations2[layer_name].cpu().numpy()
 reshaped_activation1 = activation_tensor1.reshape(-1, activation_tensor1.shape[-1])
 reshaped_activation2 = activation_tensor2.reshape(-1, activation_tensor2.shape[-1])
 
-st.sidebar.write(f"reshaped: {reshaped_activation1.shape}")
+should_apply_pca = st.sidebar.checkbox("Apply PCA to Reduce Dimensions", value=True)
+pca_components = st.sidebar.number_input("Number of PCA Components", min_value=2, max_value=reshaped_activation1.shape[0], value=2, step=1)
+
+
+
+if activation_tensor1.shape[-1] == 1:
+    st.sidebar.write("*We auto-disabled PCA since dimension size is not sufficient*")
+    should_apply_pca = False
+
+diff = None
+try:
+    diff = reshaped_activation1 - reshaped_activation2
+except:
+    st.error("Try to make both inputs produce same number of tokens for diff")
+
+
+# st.sidebar.write(f"reshaped: {reshaped_activation1.shape}")
 
 st.sidebar.divider()
 
@@ -128,12 +140,13 @@ heatmap_width = st.sidebar.slider("Heatmap Width", min_value=500, max_value=2000
 heatmap_height = st.sidebar.slider("Heatmap Height", min_value=500, max_value=2000, value=800, step=100)
 
 
-plot1 = generate_plot(reshaped_activation1, normalization=normalize_option, apply_pca=apply_pca, pca_components=pca_components, color_scale=color_scale, title="Text 1 Activation", height=heatmap_height, width=heatmap_width)
-plot2 = generate_plot(reshaped_activation2, normalization=normalize_option, apply_pca=apply_pca, pca_components=pca_components, color_scale=color_scale, title="Text 2 Activation", height=heatmap_height, width=heatmap_width)
 
+if diff is not None:
+    diff_plot = generate_plot(diff, normalization=normalize_option, apply_pca=should_apply_pca, pca_components=pca_components, color_scale=color_scale, title="Diff Activation (1-2)", height=heatmap_height, width=heatmap_width)
+    st.plotly_chart(diff_plot)
 
-
-
+plot1 = generate_plot(reshaped_activation1, normalization=normalize_option, apply_pca=should_apply_pca, pca_components=pca_components, color_scale=color_scale, title="Text 1 Activation", height=heatmap_height, width=heatmap_width)
+plot2 = generate_plot(reshaped_activation2, normalization=normalize_option, apply_pca=should_apply_pca, pca_components=pca_components, color_scale=color_scale, title="Text 2 Activation", height=heatmap_height, width=heatmap_width)
 st.plotly_chart(plot1)
-
 st.plotly_chart(plot2)
+
