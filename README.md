@@ -4,11 +4,7 @@ Simple script to visualize activation tensors for Transformer models. Wraps over
 
 <br>
 
-![demo gif](https://github.com/attentionmech/transcope/blob/main/assets/demo.gif?raw=true)
-
-<br>
-
-<img src="assets/screenshot.png"/>
+<img src="assets/compare.png"/>
 <br>
 
 
