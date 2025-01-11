@@ -50,7 +50,7 @@ def apply_pca_(matrix, n_components):
     return pca.fit_transform(matrix)
 
 def create_heatmap(matrix, title="Activation Heatmap", color_scale='Rainbow', width=800, height=600):
-    fig = px.imshow(matrix, color_continuous_scale=color_scale, title=title)
+    fig = px.imshow(matrix, color_continuous_scale=color_scale, title=title, text_auto=True)
     fig.update_layout(width=width, height=height)
     return fig
 
@@ -63,13 +63,13 @@ def generate_plot(matrix, normalization=False, apply_pca=False, pca_components=2
 
     return create_heatmap(matrix, title=title, color_scale=color_scale)
 
-# Streamlit UI
+
 st.sidebar.title("Transformer Scope")
 available_models = ["gpt2-small", "gpt2-medium", "gpt2-large", "gpt2-xl"]
 model_name = st.sidebar.selectbox("Select Model", available_models)
 model = transformer_lens.HookedTransformer.from_pretrained(model_name)
 
-# User inputs two texts
+
 text_input1 = st.sidebar.text_input("Enter your first text", value="Hello, Transformer Scoper")
 text_input2 = st.sidebar.text_input("Enter your second text", value="Hello, Comparing Activations")
 
@@ -77,23 +77,26 @@ logits1, activations1 = model.run_with_cache(text_input1)
 logits2, activations2 = model.run_with_cache(text_input2)
 
 layer_name = st.sidebar.selectbox("Select Layer", list(activations1.keys()))
+
+st.sidebar.write(activations1[layer_name].shape)
+
 normalize_option = st.sidebar.checkbox("Normalize Matrix Values", value=True)
 color_scale = st.sidebar.selectbox("Select Color Scale", ['Rainbow', 'Cividis', 'Plasma', 'Inferno', 'Magma', 'Viridis'])
 apply_pca = st.sidebar.checkbox("Apply PCA to Reduce Dimensions", value=True)
 pca_components = st.sidebar.number_input("Number of PCA Components", min_value=2, max_value=50, value=2, step=1)
 
-# Extract activation data
+st.sidebar.write("**PCA components will fail if tensor cannot reshape.")
+
 activation_tensor1 = activations1[layer_name].cpu().numpy()
 activation_tensor2 = activations2[layer_name].cpu().numpy()
 
 reshaped_activation1 = activation_tensor1.reshape(-1, activation_tensor1.shape[-1])
 reshaped_activation2 = activation_tensor2.reshape(-1, activation_tensor2.shape[-1])
 
-# Generate plots
 plot1 = generate_plot(reshaped_activation1, normalization=normalize_option, apply_pca=apply_pca, pca_components=pca_components, color_scale=color_scale, title="Text 1 Activation")
 plot2 = generate_plot(reshaped_activation2, normalization=normalize_option, apply_pca=apply_pca, pca_components=pca_components, color_scale=color_scale, title="Text 2 Activation")
 
-# Display plots side by side
+
 col1, col2 = st.columns(2)
 with col1:
     st.plotly_chart(plot1)
