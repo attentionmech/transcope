@@ -1,11 +1,16 @@
 # transformer-scope
 
-Simple script to visualize activation tensors for Transformer models. Wraps over [transformer-lens](https://github.com/TransformerLensOrg/TransformerLens).
+Simple script to visualize activation tensors for Transformer models. Wraps over [transformer-lens](https://github.com/TransformerLensOrg/TransformerLens) which support [these](https://transformerlensorg.github.io/TransformerLens/generated/model_properties_table.html) models.
+
+<br>
+
+![demo gif](https://github.com/attentionmech/transcope/blob/main/assets/demo.gif?raw=true)
+
+<br>
 
 <img src="assets/screenshot.png"/>
 <br>
 
-![demo gif](https://github.com/attentionmech/transcope/blob/main/assets/demo.gif?raw=true)
 
 ## Installation
 
