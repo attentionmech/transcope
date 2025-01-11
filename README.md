@@ -1,4 +1,4 @@
-# transcope
+# transformer-scope
 
 Simple script to visualize activation tensors for Transformer models. Wraps over [transformer-lens](https://github.com/TransformerLensOrg/TransformerLens).
 
