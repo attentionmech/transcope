@@ -43,7 +43,7 @@ def apply_pca_(matrix, n_components=2):
     pca = PCA(n_components=n_components)
     return pca.fit_transform(matrix)
 
-def create_heatmap(matrix, color_scale='Viridis', width=800, height=600, scale=1.0):
+def create_heatmap(matrix, color_scale='Rainbow', width=800, height=600, scale=2.0):
     fig = px.imshow(matrix, color_continuous_scale=color_scale, title="Activation Heatmap")
     
     fig.update_layout(
@@ -62,7 +62,7 @@ def create_heatmap(matrix, color_scale='Viridis', width=800, height=600, scale=1
     
     return fig
 
-def generate_plot(matrix, normalization=False, apply_pca=False, color_scale='Viridis'):
+def generate_plot(matrix, normalization=False, apply_pca=False, color_scale='Rainbow'):
     if normalization:
         matrix = normalize_to_range(matrix)
     
@@ -72,7 +72,9 @@ def generate_plot(matrix, normalization=False, apply_pca=False, color_scale='Vir
 
     return create_heatmap(matrix, color_scale=color_scale)
 
-st.title("transcope")
+
+st.sidebar.title("transcope")
+st.sidebar.text("Transformer Scope")
 
 model_name = st.sidebar.selectbox("Select Model", available_models)
 
@@ -88,7 +90,7 @@ normalize_option = st.sidebar.checkbox("Normalize Matrix Values", value=True)
 
 color_scale = st.sidebar.selectbox("Select Color Scale", ['Viridis', 'Cividis', 'Plasma', 'Inferno', 'Magma', 'Rainbow'])
 
-apply_pca = st.sidebar.checkbox("Apply PCA to Reduce Dimensions", value=True)
+apply_pca = st.sidebar.checkbox("Apply PCA to Reduce Dimensions", value=False)
 
 activation_tensor = activations[layer_name].cpu().numpy()
 
