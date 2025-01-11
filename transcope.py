@@ -42,8 +42,30 @@ import transformer_lens
 import streamlit as st
 from sklearn.decomposition import PCA
 
-def normalize_to_range(matrix):
-    return np.tanh(matrix)
+def normalize_to_range(matrix, normalization_type="tanh"):
+    if normalization_type == "tanh":
+        return np.tanh(matrix)
+    elif normalization_type == "sigmoid":
+        return 1 / (1 + np.exp(-matrix))
+    elif normalization_type == "min_max":
+        min_val = np.min(matrix)
+        max_val = np.max(matrix)
+        return (matrix - min_val) / (max_val - min_val)
+    elif normalization_type == "z_score":
+        mean = np.mean(matrix)
+        std = np.std(matrix)
+        return (matrix - mean) / std
+    elif normalization_type == "relu":
+        return np.maximum(0, matrix)
+    elif normalization_type == "softmax":
+        exp_matrix = np.exp(matrix - np.max(matrix))  # For numerical stability
+        return exp_matrix / np.sum(exp_matrix, axis=-1, keepdims=True)
+    elif normalization_type == "l2":
+        norm = np.linalg.norm(matrix, axis=-1, keepdims=True)
+        return matrix / norm
+    else:
+        raise ValueError("Unknown normalization type")
+
 
 def apply_pca_(matrix, n_components):
     pca = PCA(n_components=n_components)
@@ -54,18 +76,19 @@ def create_heatmap(matrix, title="Activation Heatmap", color_scale='Rainbow', wi
     fig.update_layout(width=width, height=height)
     return fig
 
-def generate_plot(matrix, normalization=False, apply_pca=False, pca_components=2, color_scale='Rainbow', title="Activation Heatmap"):
+def generate_plot(matrix, normalization=False, normalization_type="tanh", apply_pca=False, pca_components=2, color_scale='Rainbow', title="Activation Heatmap", height=800, width=600):
     if normalization:
-        matrix = normalize_to_range(matrix)
+        matrix = normalize_to_range(matrix, normalization_type=normalization_type)
     
     if apply_pca:
         matrix = apply_pca_(matrix, n_components=pca_components)
+        # st.sidebar.write(f"{title} PCA: {matrix.shape}")
 
-    return create_heatmap(matrix, title=title, color_scale=color_scale)
+    return create_heatmap(matrix, title=title, color_scale=color_scale, width=width, height=height)
 
 
 st.sidebar.title("Transformer Scope")
-available_models = ["gpt2-small", "gpt2-medium", "gpt2-large", "gpt2-xl"]
+st.sidebar.divider()
 model_name = st.sidebar.selectbox("Select Model", available_models)
 model = transformer_lens.HookedTransformer.from_pretrained(model_name)
 
@@ -78,14 +101,17 @@ logits2, activations2 = model.run_with_cache(text_input2)
 
 layer_name = st.sidebar.selectbox("Select Layer", list(activations1.keys()))
 
-st.sidebar.write(activations1[layer_name].shape)
+st.sidebar.write(f"shape: {activations1[layer_name].shape}")
 
 normalize_option = st.sidebar.checkbox("Normalize Matrix Values", value=True)
-color_scale = st.sidebar.selectbox("Select Color Scale", ['Rainbow', 'Cividis', 'Plasma', 'Inferno', 'Magma', 'Viridis'])
+normalization_type = st.sidebar.selectbox("Select Normalization Type", ['tanh', 'sigmoid', 'min_max', 'z_score', 'relu', 'softmax', 'l2'])
+
+
+
 apply_pca = st.sidebar.checkbox("Apply PCA to Reduce Dimensions", value=True)
 pca_components = st.sidebar.number_input("Number of PCA Components", min_value=2, max_value=50, value=2, step=1)
 
-st.sidebar.write("**PCA components will fail if tensor cannot reshape.")
+st.sidebar.write("*Disable PCA if tensor dimension less than 1*")
 
 activation_tensor1 = activations1[layer_name].cpu().numpy()
 activation_tensor2 = activations2[layer_name].cpu().numpy()
@@ -93,12 +119,21 @@ activation_tensor2 = activations2[layer_name].cpu().numpy()
 reshaped_activation1 = activation_tensor1.reshape(-1, activation_tensor1.shape[-1])
 reshaped_activation2 = activation_tensor2.reshape(-1, activation_tensor2.shape[-1])
 
-plot1 = generate_plot(reshaped_activation1, normalization=normalize_option, apply_pca=apply_pca, pca_components=pca_components, color_scale=color_scale, title="Text 1 Activation")
-plot2 = generate_plot(reshaped_activation2, normalization=normalize_option, apply_pca=apply_pca, pca_components=pca_components, color_scale=color_scale, title="Text 2 Activation")
+st.sidebar.write(f"reshaped: {reshaped_activation1.shape}")
+
+st.sidebar.divider()
+
+color_scale = st.sidebar.selectbox("Select Color Scale", ['Rainbow', 'Cividis', 'Plasma', 'Inferno', 'Magma', 'Viridis'])
+heatmap_width = st.sidebar.slider("Heatmap Width", min_value=500, max_value=2000, value=1200, step=100)
+heatmap_height = st.sidebar.slider("Heatmap Height", min_value=500, max_value=2000, value=800, step=100)
 
 
-col1, col2 = st.columns(2)
-with col1:
-    st.plotly_chart(plot1)
-with col2:
-    st.plotly_chart(plot2)
+plot1 = generate_plot(reshaped_activation1, normalization=normalize_option, apply_pca=apply_pca, pca_components=pca_components, color_scale=color_scale, title="Text 1 Activation", height=heatmap_height, width=heatmap_width)
+plot2 = generate_plot(reshaped_activation2, normalization=normalize_option, apply_pca=apply_pca, pca_components=pca_components, color_scale=color_scale, title="Text 2 Activation", height=heatmap_height, width=heatmap_width)
+
+
+
+
+st.plotly_chart(plot1)
+
+st.plotly_chart(plot2)
